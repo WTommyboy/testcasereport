@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxy UAT 測試儀表板</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c141c;--bg2:#121e2a;--card:#182636;--card-h:#1d2f42;--border:#253545;
+  --text:#dce6f0;--dim:#7a8fa2;--label:#506070;
+  --teal:#00d4aa;--teal-bg:rgba(0,212,170,.12);
+  --gold:#f0b060;--gold-bg:rgba(240,176,96,.1);
+  --pass:#00d4aa;--pass-bg:rgba(0,212,170,.08);
+  --fail:#ff5566;--fail-bg:rgba(255,85,102,.08);
+  --blocked:#f0b060;--blocked-bg:rgba(240,176,96,.08);
+  --partial:#60aaff;--partial-bg:rgba(96,170,255,.08);
+  --pend:#556677;--pend-bg:rgba(85,102,119,.06);
+  --r:8px;--font:'Noto Sans TC',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font:14px/1.6 var(--font);min-height:100vh}
+a{color:var(--teal);text-decoration:none}
+
+/* ─── Header ─── */
+.hdr{padding:28px 36px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
+.hdr-left h1{font-size:21px;font-weight:700;letter-spacing:-.5px}
+.hdr-left h1 em{font-style:normal;color:var(--teal)}
+.hdr-left .sub{color:var(--dim);font-size:12px;margin-top:2px}
+.md-link{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);color:var(--text);padding:7px 16px;border-radius:var(--r);font-size:12px;cursor:pointer;transition:all .15s;text-decoration:none}
+.md-link:hover{border-color:var(--teal);color:var(--teal)}
+.md-link svg{width:14px;height:14px;fill:currentColor}
+
+/* ─── Selectors ─── */
+.selectors{display:flex;flex-wrap:wrap;gap:12px;padding:18px 36px;border-bottom:1px solid var(--border);align-items:flex-end}
+.sel-group{display:flex;flex-direction:column;gap:3px}
+.sel-group label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;font-weight:500}
+.sel-group select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 28px 6px 12px;border-radius:var(--r);font:12px var(--font);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a8fa2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;min-width:160px}
+.sel-group select:hover{border-color:var(--teal)}
+.env-tag{background:var(--gold-bg);color:var(--gold);font-size:10px;font-weight:600;padding:2px 10px;border-radius:16px;letter-spacing:.8px;align-self:center;margin-left:4px}
+
+/* ─── Stats ─── */
+.stats{display:flex;gap:10px;padding:18px 36px;flex-wrap:wrap}
+.st{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 18px;flex:1;min-width:90px}
+.st .v{font:600 26px var(--mono)}
+.st .l{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:1px}
+.st.pass .v{color:var(--pass)}.st.fail .v{color:var(--fail)}.st.blocked .v{color:var(--blocked)}.st.partial .v{color:var(--partial)}.st.pend .v{color:var(--pend)}
+
+/* Progress */
+.prog{margin:0 36px 4px;height:5px;background:var(--card);border-radius:3px;overflow:hidden;display:flex}
+.prog .s{height:100%;transition:width .3s}
+.prog .s.pass{background:var(--pass)}.prog .s.fail{background:var(--fail)}.prog .s.blocked{background:var(--blocked)}.prog .s.partial{background:var(--partial)}.prog .s.pend{background:var(--pend)}
+
+/* ─── Filters ─── */
+.filters{padding:12px 36px;display:flex;gap:6px;flex-wrap:wrap}
+.fbtn{background:var(--card);border:1px solid var(--border);color:var(--dim);padding:4px 13px;border-radius:18px;cursor:pointer;font:12px var(--font);transition:all .12s}
+.fbtn:hover{border-color:var(--teal);color:var(--text)}
+.fbtn.on{background:var(--teal-bg);border-color:var(--teal);color:var(--teal)}
+.fbtn .n{font:11px var(--mono);opacity:.7;margin-left:3px}
+
+/* ─── Case list ─── */
+.list{padding:0 36px 32px}
+.ghdr{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0 6px;border-bottom:1px solid var(--border);margin-top:6px}
+.ghdr .gname{font-size:13px;font-weight:600;color:var(--gold);letter-spacing:.3px}
+.ghdr .gstats{font-size:11px;color:var(--dim);font-family:var(--mono)}
+.ghdr .gstats .gp{color:var(--pass)}.ghdr .gstats .gf{color:var(--fail)}.ghdr .gstats .gb{color:var(--blocked)}.ghdr .gstats .gpt{color:var(--partial)}
+
+.crow{border-bottom:1px solid rgba(37,53,69,.4)}
+.csum{display:grid;grid-template-columns:68px 1fr 88px 82px;align-items:center;padding:10px 0;cursor:pointer;transition:background .1s;gap:10px}
+.csum:hover{background:var(--card-h);margin:0 -10px;padding:10px;border-radius:var(--r)}
+.cid{font:500 13px var(--mono);color:var(--teal)}
+.ctitle{font-size:13px}.ctype{font-size:11px;color:var(--dim)}
+.cmeth{font-size:11px;color:var(--label);text-align:right}
+.badge{display:inline-block;font:500 11px var(--mono);padding:2px 9px;border-radius:10px;letter-spacing:.2px}
+.badge.pass{background:var(--pass-bg);color:var(--pass)}
+.badge.fail{background:var(--fail-bg);color:var(--fail)}
+.badge.blocked{background:var(--blocked-bg);color:var(--blocked)}
+.badge.partial{background:var(--partial-bg);color:var(--partial)}
+.badge.pend{background:var(--pend-bg);color:var(--pend)}
+
+.exp{display:inline-block;width:14px;text-align:center;color:var(--dim);font-size:9px;transition:transform .2s;margin-right:3px}
+.crow.open .exp{transform:rotate(90deg)}
+
+.cdet{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin:3px 0 10px;padding:16px 20px;animation:sd .18s ease}
+.cdet.show{display:block}
+@keyframes sd{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.dt{width:100%;border-collapse:collapse}
+.dt td{padding:5px 0;font-size:13px;vertical-align:top}
+.dt td:first-child{width:180px;color:var(--dim);font-weight:500;padding-right:14px;white-space:nowrap}
+.dt code{font:12px var(--mono);background:rgba(0,212,170,.07);color:var(--teal);padding:1px 5px;border-radius:3px}
+
+/* ─── Bug ─── */
+.bugs{padding:0 36px 32px}
+.bugs h2{font-size:15px;font-weight:600;margin-bottom:10px}
+.bcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:6px}
+.bcard .bh{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.sev{font:600 10px var(--mono);padding:2px 7px;border-radius:4px;text-transform:uppercase}
+.sev.high{background:var(--fail-bg);color:var(--fail)}.sev.medium{background:var(--blocked-bg);color:var(--blocked)}.sev.low{background:var(--partial-bg);color:var(--partial)}.sev.info{background:var(--pend-bg);color:var(--dim)}
+.bcard .bid{font:13px var(--mono);color:var(--teal)}
+.bcard .bd{font-size:13px;margin-bottom:4px}
+.bcard .ba{font-size:12px;color:var(--dim)}
+
+.foot{padding:16px 36px;border-top:1px solid var(--border);color:var(--label);font-size:11px;text-align:center}
+
+/* Loading */
+.loading{text-align:center;padding:60px;color:var(--dim)}
+.loading .spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{text-align:center;padding:40px;color:var(--fail)}
+
+@media(max-width:768px){
+  .hdr,.selectors,.stats,.filters,.list,.bugs,.foot{padding-left:14px;padding-right:14px}
+  .prog{margin:0 14px 4px}
+  .csum{grid-template-columns:56px 1fr 76px}.cmeth{display:none}
+  .selectors{flex-direction:column}
+  .sel-group select{min-width:100%}
+}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading"><div class="spinner"></div><br>載入 Google Sheets 資料中...</div></div>
+
+<script>
+// ============================================================
+//  CONFIG — 只需改這裡
+// ============================================================
+const SHEET_ID = "YOUR_GOOGLE_SHEET_ID_HERE"; // ← 貼上你的 Google Sheets ID
+// ============================================================
+
+const SHEETS = { index:"索引", cases:"測試案例", bugs:"Bug" };
+const BADGE_LABEL = {PASS:"PASS",FAIL:"FAIL",BLOCKED:"BLOCKED",PARTIAL:"PARTIAL","":"—"};
+const BADGE_CLASS = {PASS:"pass",FAIL:"fail",BLOCKED:"blocked",PARTIAL:"partial","":"pend"};
+
+let DATA = { index:[], cases:[], bugs:[] };
+let state = { loc:"", major:"", minor:"", round:"", group:"ALL" };
+let expanded = null;
+
+// ─── Fetch Google Sheets ───
+async function fetchSheet(name) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]+)\);?/)[1]);
+  const cols = json.table.cols.map(c => c.label);
+  return json.table.rows.map(r => {
+    const obj = {};
+    r.c.forEach((cell, i) => { obj[cols[i]] = cell ? (cell.v ?? "") : ""; });
+    return obj;
+  });
+}
+
+async function loadData() {
+  try {
+    const [idx, cases, bugs] = await Promise.all([
+      fetchSheet(SHEETS.index),
+      fetchSheet(SHEETS.cases),
+      fetchSheet(SHEETS.bugs)
+    ]);
+    DATA = { index: idx, cases, bugs };
+    // Auto-select first available values
+    const locs = [...new Set(idx.map(r=>r["位置"]))];
+    state.loc = locs[0] || "";
+    updateCascade();
+    render();
+  } catch(e) {
+    document.getElementById("app").innerHTML = `<div class="err">
+      <h2>⚠️ 無法載入資料</h2>
+      <p style="margin:12px 0;color:var(--dim)">請確認：</p>
+      <p>1. Google Sheets ID 已正確填入 HTML 的 <code>SHEET_ID</code></p>
+      <p>2. 試算表已設為「知道連結的人可檢視」</p>
+      <p>3. Sheet 名稱為「索引」「測試案例」「Bug」</p>
+      <p style="margin-top:16px;font-size:12px;color:var(--label)">錯誤：${e.message}</p>
+    </div>`;
+  }
+}
+
+function updateCascade() {
+  const idx = DATA.index;
+  const majors = [...new Set(idx.filter(r=>r["位置"]===state.loc).map(r=>r["功能主項"]))];
+  state.major = majors.includes(state.major) ? state.major : (majors[0]||"");
+  const minors = [...new Set(idx.filter(r=>r["位置"]===state.loc && r["功能主項"]===state.major).map(r=>r["功能細項"]))];
+  state.minor = minors.includes(state.minor) ? state.minor : (minors[0]||"");
+  const rounds = idx.filter(r=>r["位置"]===state.loc && r["功能主項"]===state.major && r["功能細項"]===state.minor);
+  state.round = rounds.find(r=>r["輪次ID"]===state.round) ? state.round : (rounds[0]?.["輪次ID"]||"");
+}
+
+function getFilteredCases() {
+  let c = DATA.cases.filter(r=>r["輪次ID"]===state.round);
+  if (state.group !== "ALL") c = c.filter(r=>r["群組"]===state.group);
+  return c;
+}
+
+function getRoundInfo() {
+  return DATA.index.find(r=>r["輪次ID"]===state.round) || {};
+}
+
+function countResults(cases) {
+  const c = {total:cases.length, PASS:0, FAIL:0, BLOCKED:0, PARTIAL:0, pending:0};
+  cases.forEach(r => { const res = r["結果"]||""; if(c[res]!==undefined) c[res]++; else c.pending++; });
+  return c;
+}
+
+function groupStats(cases, groupName) {
+  const gc = cases.filter(r=>r["群組"]===groupName);
+  return countResults(gc);
+}
+
+// ─── Render ───
+function render() {
+  const idx = DATA.index;
+  const locs = [...new Set(idx.map(r=>r["位置"]))];
+  const majors = [...new Set(idx.filter(r=>r["位置"]===state.loc).map(r=>r["功能主項"]))];
+  const minors = [...new Set(idx.filter(r=>r["位置"]===state.loc&&r["功能主項"]===state.major).map(r=>r["功能細項"]))];
+  const rounds = idx.filter(r=>r["位置"]===state.loc&&r["功能主項"]===state.major&&r["功能細項"]===state.minor);
+  const ri = getRoundInfo();
+  const allCases = DATA.cases.filter(r=>r["輪次ID"]===state.round);
+  const filtered = getFilteredCases();
+  const ct = countResults(allCases);
+  const groups = [...new Set(allCases.map(r=>r["群組"]))];
+  const groupCounts = {};
+  groups.forEach(g => groupCounts[g] = allCases.filter(r=>r["群組"]===g).length);
+  const bugs = DATA.bugs.filter(r=>r["輪次ID"]===state.round);
+
+  const opt = (arr, val, labelKey) => arr.map(v => {
+    const label = typeof v === "object" ? v[labelKey] : v;
+    const value = typeof v === "object" ? v["輪次ID"] : v;
+    return `<option value="${value}" ${value===val?"selected":""}>${label}${typeof v==="object"&&v["日期"]?" ("+v["日期"]+")":""}</option>`;
+  }).join("");
+
+  document.getElementById("app").innerHTML = `
+    <div class="hdr">
+      <div class="hdr-left">
+        <h1>🔬 <em>Galaxy</em> UAT 測試儀表板</h1>
+        <div class="sub">最後更新 ${ri["日期"]||"—"} · 測試者 ${ri["測試者"]||"—"}</div>
+      </div>
+      ${ri["MD連結"] ? `<a class="md-link" href="${ri["MD連結"]}" target="_blank"><svg viewBox="0 0 16 16"><path d="M4 1h8a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1zm1 3v1h6V4H5zm0 3v1h6V7H5zm0 3v1h4v-1H5z"/></svg>完整測報 MD</a>` : ""}
+    </div>
+
+    <div class="selectors">
+      <div class="sel-group"><label>位置</label><select onchange="pick('loc',this.value)">${opt(locs,state.loc)}</select></div>
+      <div class="sel-group"><label>功能主項</label><select onchange="pick('major',this.value)">${opt(majors,state.major)}</select></div>
+      <div class="sel-group"><label>功能細項</label><select onchange="pick('minor',this.value)">${opt(minors,state.minor)}</select></div>
+      <div class="sel-group"><label>測試輪次</label><select onchange="pick('round',this.value)">${opt(rounds,state.round,"輪次名稱")}</select></div>
+      <span class="env-tag">DEV</span>
+    </div>
+
+    <div class="stats">
+      <div class="st"><div class="v">${ct.total}</div><div class="l">總案例</div></div>
+      <div class="st pass"><div class="v">${ct.PASS}</div><div class="l">Pass</div></div>
+      <div class="st fail"><div class="v">${ct.FAIL}</div><div class="l">Fail</div></div>
+      <div class="st blocked"><div class="v">${ct.BLOCKED}</div><div class="l">Blocked</div></div>
+      <div class="st partial"><div class="v">${ct.PARTIAL}</div><div class="l">Partial</div></div>
+      <div class="st pend"><div class="v">${ct.pending}</div><div class="l">未測試</div></div>
+    </div>
+    <div class="prog">
+      <div class="s pass" style="width:${ct.PASS/ct.total*100||0}%"></div>
+      <div class="s fail" style="width:${ct.FAIL/ct.total*100||0}%"></div>
+      <div class="s blocked" style="width:${ct.BLOCKED/ct.total*100||0}%"></div>
+      <div class="s partial" style="width:${ct.PARTIAL/ct.total*100||0}%"></div>
+      <div class="s pend" style="width:${ct.pending/ct.total*100||0}%"></div>
+    </div>
+
+    <div class="filters">
+      <button class="fbtn ${state.group==="ALL"?"on":""}" onclick="pick('group','ALL')">全部<span class="n">${ct.total}</span></button>
+      ${groups.map(g=>{
+        const k=g.split("：")[0];
+        return `<button class="fbtn ${state.group===g?"on":""}" onclick="pick('group','${g}')">${k}<span class="n">${groupCounts[g]}</span></button>`;
+      }).join("")}
+    </div>
+
+    <div class="list">${renderCases(filtered, allCases)}</div>
+
+    ${bugs.length ? `<div class="bugs"><h2>🐛 已發現 Bug（${bugs.length}）</h2>${bugs.map(b=>`
+      <div class="bcard"><div class="bh"><span class="sev ${(b["嚴重度"]||"").toLowerCase()}">${b["嚴重度"]}</span><span class="bid">${b["關聯編號"]}</span></div>
+      <div class="bd">${b["描述"]}</div><div class="ba">💡 ${b["建議確認方式"]}</div></div>`).join("")}</div>`:""}
+
+    <div class="foot">Galaxy UAT Dashboard · Powered by Google Sheets</div>
+  `;
+}
+
+function renderCases(cases, allCases) {
+  let html = "", lastG = "";
+  cases.forEach(c => {
+    const g = c["群組"];
+    if (g !== lastG) {
+      const gs = groupStats(allCases, g);
+      const parts = [];
+      if(gs.PASS) parts.push(`<span class="gp">${gs.PASS} Pass</span>`);
+      if(gs.FAIL) parts.push(`<span class="gf">${gs.FAIL} Fail</span>`);
+      if(gs.BLOCKED) parts.push(`<span class="gb">${gs.BLOCKED} Blocked</span>`);
+      if(gs.PARTIAL) parts.push(`<span class="gpt">${gs.PARTIAL} Partial</span>`);
+      if(gs.pending) parts.push(`${gs.pending} 未測`);
+      html += `<div class="ghdr"><span class="gname">${g} (${gs.total})</span><span class="gstats">${parts.join(" · ")}</span></div>`;
+      lastG = g;
+    }
+    const res = c["結果"] || "";
+    const cls = BADGE_CLASS[res] || "pend";
+    const label = BADGE_LABEL[res] || "—";
+    const id = c["編號"];
+    const isOpen = expanded === id;
+    let detailHtml = "";
+    if (isOpen) {
+      let detail = {};
+      try { detail = JSON.parse(c["詳細紀錄JSON"] || "{}"); } catch(e) {}
+      const rows = Object.entries(detail).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join("");
+      detailHtml = `<div class="cdet show"><table class="dt"><tr><td>測試日</td><td>${c["測試日"]||"—"}</td></tr>${rows || '<tr><td>狀態</td><td style="color:var(--dim)">尚未執行</td></tr>'}</table></div>`;
+    }
+    html += `<div class="crow ${isOpen?"open":""}">
+      <div class="csum" onclick="toggle('${id}')">
+        <div class="cid"><span class="exp">▶</span>${id}</div>
+        <div><span class="ctitle">${c["測試項目"]}</span><br><span class="ctype">${c["測試類型"]}</span></div>
+        <div><span class="badge ${cls}">${label}</span></div>
+        <div class="cmeth">${c["執行方式"]||""}</div>
+      </div>${detailHtml}</div>`;
+  });
+  return html || '<div style="padding:24px;color:var(--dim);text-align:center">無符合條件的測試案例</div>';
+}
+
+function pick(key, val) {
+  state[key] = val;
+  if (key !== "group" && key !== "round") { updateCascade(); }
+  expanded = null;
+  render();
+}
+function toggle(id) { expanded = expanded===id ? null : id; render(); }
+
+// ─── Boot ───
+loadData();
+</script>
+</body>
+</html>
