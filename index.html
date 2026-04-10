@@ -57,6 +57,12 @@ a{color:var(--teal);text-decoration:none}
 .fbtn:hover{border-color:var(--teal);color:var(--text)}
 .fbtn.on{background:var(--teal-bg);border-color:var(--teal);color:var(--teal)}
 .fbtn .n{font:11px var(--mono);opacity:.7;margin-left:3px}
+.fbtn.on-pass{background:var(--pass-bg);border-color:var(--pass);color:var(--pass)}
+.fbtn.on-fail{background:var(--fail-bg);border-color:var(--fail);color:var(--fail)}
+.fbtn.on-blocked{background:var(--blocked-bg);border-color:var(--blocked);color:var(--blocked)}
+.fbtn.on-partial{background:var(--partial-bg);border-color:var(--partial);color:var(--partial)}
+.fbtn.on-pend{background:var(--pend-bg);border-color:var(--pend);color:var(--pend)}
+.filter-sep{width:1px;height:24px;background:var(--border);margin:0 6px;align-self:center}
 
 /* ─── Case list ─── */
 .list{padding:0 36px 32px}
@@ -132,7 +138,7 @@ const BADGE_LABEL = {PASS:"PASS",FAIL:"FAIL",BLOCKED:"BLOCKED",PARTIAL:"PARTIAL"
 const BADGE_CLASS = {PASS:"pass",FAIL:"fail",BLOCKED:"blocked",PARTIAL:"partial","":"pend"};
 
 let DATA = { index:[], cases:[], bugs:[] };
-let state = { loc:"", major:"", minor:"", round:"", group:"ALL" };
+let state = { loc:"", major:"", minor:"", round:"", group:"ALL", status:"ALL" };
 let expanded = null;
 
 // ─── Fetch Google Sheets ───
@@ -187,6 +193,10 @@ function updateCascade() {
 function getFilteredCases() {
   let c = DATA.cases.filter(r=>r["輪次ID"]===state.round);
   if (state.group !== "ALL") c = c.filter(r=>r["群組"]===state.group);
+  if (state.status !== "ALL") {
+    if (state.status === "pending") c = c.filter(r=>!r["結果"]||!BADGE_CLASS[r["結果"]]);
+    else c = c.filter(r=>r["結果"]===state.status);
+  }
   return c;
 }
 
@@ -266,6 +276,13 @@ function render() {
         const k=g.split("：")[0];
         return `<button class="fbtn ${state.group===g?"on":""}" onclick="pick('group','${g}')">${k}<span class="n">${groupCounts[g]}</span></button>`;
       }).join("")}
+      <div class="filter-sep"></div>
+      <button class="fbtn ${state.status==="ALL"?"on":""}" onclick="pick('status','ALL')">所有狀態</button>
+      ${ct.PASS?`<button class="fbtn ${state.status==="PASS"?"on-pass":""}" onclick="pick('status','PASS')">✅ Pass<span class="n">${ct.PASS}</span></button>`:""}
+      ${ct.FAIL?`<button class="fbtn ${state.status==="FAIL"?"on-fail":""}" onclick="pick('status','FAIL')">❌ Fail<span class="n">${ct.FAIL}</span></button>`:""}
+      ${ct.BLOCKED?`<button class="fbtn ${state.status==="BLOCKED"?"on-blocked":""}" onclick="pick('status','BLOCKED')">🚫 Blocked<span class="n">${ct.BLOCKED}</span></button>`:""}
+      ${ct.PARTIAL?`<button class="fbtn ${state.status==="PARTIAL"?"on-partial":""}" onclick="pick('status','PARTIAL')">⚠️ Partial<span class="n">${ct.PARTIAL}</span></button>`:""}
+      ${ct.pending?`<button class="fbtn ${state.status==="pending"?"on-pend":""}" onclick="pick('status','pending')">未測試<span class="n">${ct.pending}</span></button>`:""}
     </div>
 
     <div class="list">${renderCases(filtered, allCases)}</div>
@@ -284,13 +301,15 @@ function renderCases(cases, allCases) {
     const g = c["群組"];
     if (g !== lastG) {
       const gs = groupStats(allCases, g);
+      const filteredInGroup = cases.filter(r=>r["群組"]===g).length;
       const parts = [];
       if(gs.PASS) parts.push(`<span class="gp">${gs.PASS} Pass</span>`);
       if(gs.FAIL) parts.push(`<span class="gf">${gs.FAIL} Fail</span>`);
       if(gs.BLOCKED) parts.push(`<span class="gb">${gs.BLOCKED} Blocked</span>`);
       if(gs.PARTIAL) parts.push(`<span class="gpt">${gs.PARTIAL} Partial</span>`);
       if(gs.pending) parts.push(`${gs.pending} 未測`);
-      html += `<div class="ghdr"><span class="gname">${g} (${gs.total})</span><span class="gstats">${parts.join(" · ")}</span></div>`;
+      const countLabel = state.status !== "ALL" ? `${filteredInGroup}/${gs.total}` : `${gs.total}`;
+      html += `<div class="ghdr"><span class="gname">${g} (${countLabel})</span><span class="gstats">${parts.join(" · ")}</span></div>`;
       lastG = g;
     }
     const res = c["結果"] || "";
@@ -318,7 +337,7 @@ function renderCases(cases, allCases) {
 
 function pick(key, val) {
   state[key] = val;
-  if (key !== "group" && key !== "round") { updateCascade(); }
+  if (key !== "group" && key !== "round" && key !== "status") { updateCascade(); }
   expanded = null;
   render();
 }
