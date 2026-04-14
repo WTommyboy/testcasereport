@@ -30,6 +30,13 @@ a{color:var(--teal);text-decoration:none}
 .md-link{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);color:var(--text);padding:7px 16px;border-radius:var(--r);font-size:12px;cursor:pointer;transition:all .15s;text-decoration:none}
 .md-link:hover{border-color:var(--teal);color:var(--teal)}
 .md-link svg{width:14px;height:14px;fill:currentColor}
+.hdr-right{display:flex;gap:8px;align-items:flex-start}
+.refresh-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.refresh-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all .15s;color:var(--dim)}
+.refresh-btn:hover{border-color:var(--teal);color:var(--teal)}
+.refresh-btn.spinning svg{animation:spin .6s linear}
+.refresh-btn svg{width:16px;height:16px;fill:currentColor;transition:transform .15s}
+.refresh-time{font:10px var(--mono);color:var(--label);white-space:nowrap}
 
 /* ─── Selectors ─── */
 .selectors{display:flex;flex-wrap:wrap;gap:12px;padding:18px 36px;border-bottom:1px solid var(--border);align-items:flex-end}
@@ -193,6 +200,7 @@ const BADGE_CLASS = {PASS:"pass",FAIL:"fail",BLOCKED:"blocked",PARTIAL:"partial"
 let DATA = { index:[], cases:[], bugs:[] };
 let state = { loc:"", major:"", minor:"", round:"", group:"ALL", status:"ALL" };
 let expanded = null;
+let lastFetched = "";
 
 // ─── Fetch Google Sheets ───
 async function fetchSheet(name) {
@@ -216,6 +224,8 @@ async function loadData() {
       fetchSheet(SHEETS.bugs)
     ]);
     DATA = { index: idx, cases, bugs };
+    const now = new Date();
+    lastFetched = now.getFullYear() + "." + String(now.getMonth()+1).padStart(2,"0") + "." + String(now.getDate()).padStart(2,"0") + " " + String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0") + ":" + String(now.getSeconds()).padStart(2,"0");
     // Auto-select first available values
     const locs = [...new Set(idx.map(r=>r["位置"]))];
     state.loc = locs[0] || "";
@@ -296,7 +306,16 @@ function render() {
         <h1>🔬 <em>Galaxy</em> UAT 測試儀表板</h1>
         <div class="sub">最後更新 ${ri["日期"]||"—"} · 測試者 ${ri["測試者"]||"—"}</div>
       </div>
-      ${ri["MD連結"] ? `<a class="md-link" href="${ri["MD連結"]}" target="_blank"><svg viewBox="0 0 16 16"><path d="M4 1h8a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1zm1 3v1h6V4H5zm0 3v1h6V7H5zm0 3v1h4v-1H5z"/></svg>完整測報 MD</a>` : ""}
+      ${ri["MD連結"] ? `<div class="hdr-right">
+        <a class="md-link" href="${ri["MD連結"]}" target="_blank"><svg viewBox="0 0 16 16"><path d="M4 1h8a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1zm1 3v1h6V4H5zm0 3v1h6V7H5zm0 3v1h4v-1H5z"/></svg>完整測報 MD</a>
+        <div class="refresh-wrap">
+          <button class="refresh-btn" onclick="refreshData()" title="重新載入資料"><svg viewBox="0 0 16 16"><path d="M13.65 2.35A7.96 7.96 0 008 0a8 8 0 108 8h-2a6 6 0 11-1.76-4.24L10 6h6V0l-2.35 2.35z"/></svg></button>
+          <span class="refresh-time">${lastFetched}</span>
+        </div>
+      </div>` : `<div class="refresh-wrap">
+          <button class="refresh-btn" onclick="refreshData()" title="重新載入資料"><svg viewBox="0 0 16 16"><path d="M13.65 2.35A7.96 7.96 0 008 0a8 8 0 108 8h-2a6 6 0 11-1.76-4.24L10 6h6V0l-2.35 2.35z"/></svg></button>
+          <span class="refresh-time">${lastFetched}</span>
+        </div>`}
     </div>
 
     <div class="selectors">
@@ -395,6 +414,11 @@ function pick(key, val) {
   render();
 }
 function toggle(id) { expanded = expanded===id ? null : id; render(); }
+function refreshData() {
+  const btn = document.querySelector(".refresh-btn");
+  if(btn) btn.classList.add("spinning");
+  loadData();
+}
 
 // ─── Boot ───
 loadData();
