@@ -114,12 +114,65 @@ a{color:var(--teal);text-decoration:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 .err{text-align:center;padding:40px;color:var(--fail)}
 
+/* ─── RWD: Tablet (≤ 768px) ─── */
 @media(max-width:768px){
-  .hdr,.selectors,.stats,.filters,.list,.bugs,.foot{padding-left:14px;padding-right:14px}
-  .prog{margin:0 14px 4px}
-  .csum{grid-template-columns:56px 1fr 76px}.cmeth{display:none}
-  .selectors{flex-direction:column}
-  .sel-group select{min-width:100%}
+  .hdr,.selectors,.stats,.filters,.list,.bugs,.foot{padding-left:16px;padding-right:16px}
+  .prog{margin:0 16px 4px}
+  .hdr{flex-direction:column;gap:12px}
+  .md-link{align-self:flex-start}
+  .selectors{flex-direction:column;gap:10px}
+  .sel-group{width:100%}
+  .sel-group select{min-width:100%;width:100%}
+  .env-tag{align-self:flex-start;margin-left:0}
+  .stats{gap:8px}
+  .st{min-width:calc(33.3% - 6px);padding:10px 14px}
+  .st .v{font-size:22px}
+  .csum{grid-template-columns:56px 1fr 76px}
+  .cmeth{display:none}
+  .ghdr{flex-direction:column;gap:4px}
+  .ghdr .gstats{font-size:10px}
+  .dt td:first-child{width:120px;font-size:12px}
+  .dt td{font-size:12px}
+  .filter-sep{display:none}
+  .filters{gap:5px}
+  .fbtn{padding:4px 10px;font-size:11px}
+  .bcard{padding:12px 14px}
+  .bcard .bd{font-size:12px}
+}
+
+/* ─── RWD: Mobile (≤ 480px) ─── */
+@media(max-width:480px){
+  .hdr,.selectors,.stats,.filters,.list,.bugs,.foot{padding-left:12px;padding-right:12px}
+  .prog{margin:0 12px 4px}
+  .hdr-left h1{font-size:17px}
+  .hdr-left .sub{font-size:11px}
+  .md-link{font-size:11px;padding:5px 12px}
+  .stats{gap:6px}
+  .st{min-width:calc(50% - 4px);flex:unset;padding:8px 12px}
+  .st .v{font-size:20px}
+  .st .l{font-size:9px}
+  .csum{grid-template-columns:48px 1fr 68px;gap:6px;padding:8px 0}
+  .cid{font-size:11px}
+  .ctitle{font-size:12px}
+  .ctype{font-size:10px}
+  .badge{font-size:10px;padding:2px 7px}
+  .exp{width:10px;font-size:8px}
+  .cdet{padding:12px 14px}
+  .dt td:first-child{width:auto;white-space:normal;display:block;padding-right:0;padding-bottom:2px;font-size:11px}
+  .dt td:last-child{display:block;padding-bottom:8px;font-size:12px}
+  .dt tr{display:block;border-bottom:1px solid var(--border);padding:4px 0}
+  .ghdr .gname{font-size:12px}
+  .ghdr .gstats{font-size:9px}
+  .filters{gap:4px}
+  .fbtn{padding:3px 8px;font-size:10px}
+  .fbtn .n{font-size:9px}
+  .bcard .bh{flex-wrap:wrap;gap:6px}
+  .bcard .bd{font-size:11px}
+  .bcard .ba{font-size:11px}
+  .sev{font-size:9px}
+  .bcard .bid{font-size:11px}
+  .bugs h2{font-size:14px}
+  .foot{font-size:10px}
 }
 </style>
 </head>
