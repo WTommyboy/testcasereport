@@ -126,6 +126,7 @@ a{color:var(--teal);text-decoration:none}
   .hdr,.selectors,.stats,.filters,.list,.bugs,.foot{padding-left:16px;padding-right:16px}
   .prog{margin:0 16px 4px}
   .hdr{flex-direction:column;gap:12px}
+  .hdr-right{width:100%;justify-content:space-between}
   .md-link{align-self:flex-start}
   .selectors{flex-direction:column;gap:10px}
   .sel-group{width:100%}
@@ -306,16 +307,13 @@ function render() {
         <h1>🔬 <em>Galaxy</em> UAT 測試儀表板</h1>
         <div class="sub">最後更新 ${ri["日期"]||"—"} · 測試者 ${ri["測試者"]||"—"}</div>
       </div>
-      ${ri["MD連結"] ? `<div class="hdr-right">
-        <a class="md-link" href="${ri["MD連結"]}" target="_blank"><svg viewBox="0 0 16 16"><path d="M4 1h8a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1zm1 3v1h6V4H5zm0 3v1h6V7H5zm0 3v1h4v-1H5z"/></svg>完整測報 MD</a>
+      <div class="hdr-right">
+        ${ri["MD連結"] ? `<a class="md-link" href="${ri["MD連結"]}" target="_blank"><svg viewBox="0 0 16 16"><path d="M4 1h8a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1zm1 3v1h6V4H5zm0 3v1h6V7H5zm0 3v1h4v-1H5z"/></svg>完整測報 MD</a>` : "<span></span>"}
         <div class="refresh-wrap">
           <button class="refresh-btn" onclick="refreshData()" title="重新載入資料"><svg viewBox="0 0 16 16"><path d="M13.65 2.35A7.96 7.96 0 008 0a8 8 0 108 8h-2a6 6 0 11-1.76-4.24L10 6h6V0l-2.35 2.35z"/></svg></button>
           <span class="refresh-time">${lastFetched}</span>
         </div>
-      </div>` : `<div class="refresh-wrap">
-          <button class="refresh-btn" onclick="refreshData()" title="重新載入資料"><svg viewBox="0 0 16 16"><path d="M13.65 2.35A7.96 7.96 0 008 0a8 8 0 108 8h-2a6 6 0 11-1.76-4.24L10 6h6V0l-2.35 2.35z"/></svg></button>
-          <span class="refresh-time">${lastFetched}</span>
-        </div>`}
+      </div>
     </div>
 
     <div class="selectors">
